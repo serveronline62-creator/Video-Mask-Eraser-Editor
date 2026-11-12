@@ -41,19 +41,19 @@
     .tool-btn.active { border-color: #007bff; background: #e3f2fd; color: #1565c0; }
     .tool-btn.active.erase { border-color: #dc3545; background: #ffebee; color: #c62828; }
     .tool-btn.active.restore { border-color: #28a745; background: #e8f5e9; color: #2e7d32; }
+    .tool-btn.active.transform { border-color: #9c27b0; background: #f3e5f5; color: #6a1b9a; }
     .status { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 14px; background: #e3f2fd; color: #1565c0; text-align: center; }
     .status.error { background: #ffebee; color: #c62828; }
     .status.success { background: #e8f5e9; color: #2e7d32; }
     .status.warning { background: #fff8e1; color: #e65100; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .panel-header h3 { margin: 0; }
-    .divider { border-top: 1px solid #ddd; margin: 12px 0; }
 </style>
 </head>
 <body>
 <div class="container">
     <h1>🎬 Video Mask & Eraser Editor</h1>
-    <p style="text-align:center; color:#555; margin-top:0;">Gunakan <strong>Eraser</strong> untuk "mengikis" video depan, atur <strong>Transform</strong> untuk mengubah ukuran/posisi, atau <strong>Rect Mask</strong> untuk area kotak.</p>
+    <p style="text-align:center; color:#555; margin-top:0;">Pilih <strong>Transform</strong> untuk mengubah ukuran/posisi video depan lewat kursor, atau <strong>Eraser</strong> untuk mengikis.</p>
 
     <div class="upload-grid">
         <div class="upload-box" id="box-back">
@@ -68,6 +68,7 @@
 
     <div class="tool-selector">
         <button class="tool-btn active" data-tool="view">👁 Lihat Saja</button>
+        <button class="tool-btn transform" data-tool="transform">🔲 Transform (Drag)</button>
         <button class="tool-btn erase" data-tool="erase">🧽 Eraser (Hapus)</button>
         <button class="tool-btn restore" data-tool="restore">↩ Restore (Kembalikan)</button>
     </div>
@@ -84,7 +85,6 @@
         <button id="btn-export" disabled class="secondary">⬇ Export WebM</button>
     </div>
 
-    <!-- Panel Transform Video Belakang -->
     <div class="panel">
         <div class="panel-header">
             <h3>🖼 Transform Video Belakang</h3>
@@ -92,45 +92,43 @@
         </div>
         <div class="slider-row">
             <label>Skala</label>
-            <input type="range" id="back-scale" min="10" max="300" value="100">
+            <input type="range" id="back-scale" min="10" max="500" value="100">
             <span id="back-scale-v">100%</span>
         </div>
         <div class="slider-row">
             <label>Geser X</label>
-            <input type="range" id="back-x" min="-1280" max="1280" value="0">
+            <input type="range" id="back-x" min="-2560" max="2560" value="0">
             <span id="back-x-v">0 px</span>
         </div>
         <div class="slider-row">
             <label>Geser Y</label>
-            <input type="range" id="back-y" min="-720" max="720" value="0">
+            <input type="range" id="back-y" min="-1440" max="1440" value="0">
             <span id="back-y-v">0 px</span>
         </div>
     </div>
 
-    <!-- Panel Transform Video Depan -->
     <div class="panel">
         <div class="panel-header">
-            <h3>🎭 Transform Video Depan</h3>
+            <h3>🎭 Transform Video Depan <span style="font-size:13px; color:#6a1b9a; font-weight:normal;">(bisa digeser dengan kursor)</span></h3>
             <button id="btn-reset-front" class="secondary small" disabled>↺ Reset</button>
         </div>
         <div class="slider-row">
             <label>Skala</label>
-            <input type="range" id="front-scale" min="10" max="300" value="100">
+            <input type="range" id="front-scale" min="10" max="500" value="100">
             <span id="front-scale-v">100%</span>
         </div>
         <div class="slider-row">
             <label>Geser X</label>
-            <input type="range" id="front-x" min="-1280" max="1280" value="0">
+            <input type="range" id="front-x" min="-2560" max="2560" value="0">
             <span id="front-x-v">0 px</span>
         </div>
         <div class="slider-row">
             <label>Geser Y</label>
-            <input type="range" id="front-y" min="-720" max="720" value="0">
+            <input type="range" id="front-y" min="-1440" max="1440" value="0">
             <span id="front-y-v">0 px</span>
         </div>
     </div>
 
-    <!-- Panel Eraser -->
     <div class="panel">
         <h3>🧽 Pengaturan Eraser</h3>
         <div class="slider-row">
@@ -140,11 +138,9 @@
         </div>
         <div class="controls" style="margin-bottom:0; margin-top:12px;">
             <button id="btn-clear-eraser" class="warn" disabled>🧹 Bersihkan Semua Eraser</button>
-            <span style="font-size:14px; color:#666;">Tahan mouse dan seret untuk mengikis. Pilih "Restore" untuk mengembalikan.</span>
         </div>
     </div>
 
-    <!-- Panel Rect Mask -->
     <div class="panel">
         <h3>🔲 Rect Mask (Kotak)</h3>
         <div class="slider-row">
@@ -178,7 +174,7 @@
         </div>
         <div class="toggle-row">
             <input type="checkbox" id="invert">
-            <label for="invert">Balik mask kotak (video belakang muncul di dalam kotak)</label>
+            <label for="invert">Balik mask kotak</label>
         </div>
     </div>
 
@@ -206,6 +202,7 @@ let currentTool = 'view';
 let eraserSize = 60;
 let isDrawing = false;
 let lastX = null, lastY = null;
+let dragState = null;
 
 // ---------- Util ----------
 function setStatus(msg, type = '') {
@@ -238,32 +235,63 @@ function resizeCanvases(w, h) {
     ['mx', 'mw'].forEach(id => $(id).max = w);
     ['my', 'mh'].forEach(id => $(id).max = h);
     $('mr').max = Math.min(w, h) / 2;
-    ['back', 'front'].forEach(p => {
-        $(p + '-x').min = -w; $(p + '-x').max = w;
-        $(p + '-y').min = -h; $(p + '-y').max = h;
-    });
 }
 
-// ---------- Gambar video dengan transformasi ----------
-function drawVideoTransformed(context, video, prefix) {
+// ---------- Hitung rect video depan ----------
+function getFrontRect() {
     const w = canvas.width, h = canvas.height;
-    const vw = video.videoWidth || w;
-    const vh = video.videoHeight || h;
-
-    const scale = parseFloat($(prefix + '-scale').value) / 100;
-    const offsetX = parseFloat($(prefix + '-x').value);
-    const offsetY = parseFloat($(prefix + '-y').value);
-
-    // Fit "contain" sebagai basis
+    const vw = videoFront.videoWidth || w;
+    const vh = videoFront.videoHeight || h;
+    const scale = parseFloat($('front-scale').value) / 100;
+    const offsetX = parseFloat($('front-x').value);
+    const offsetY = parseFloat($('front-y').value);
     const fitRatio = Math.min(w / vw, h / vh);
     const baseW = vw * fitRatio;
     const baseH = vh * fitRatio;
-
     const drawW = baseW * scale;
     const drawH = baseH * scale;
     const drawX = (w - drawW) / 2 + offsetX;
     const drawY = (h - drawH) / 2 + offsetY;
+    return { drawX, drawY, drawW, drawH, baseW, baseH };
+}
 
+function getHandleSizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    return 12 * (canvas.width / (rect.width || canvas.width));
+}
+
+function hitTest(x, y) {
+    if (!frontLoaded) return null;
+    const r = getFrontRect();
+    const hs = getHandleSizeCanvas() / 2 + 2;
+    const corners = [
+        { name: 'tl', x: r.drawX, y: r.drawY },
+        { name: 'tr', x: r.drawX + r.drawW, y: r.drawY },
+        { name: 'bl', x: r.drawX, y: r.drawY + r.drawH },
+        { name: 'br', x: r.drawX + r.drawW, y: r.drawY + r.drawH },
+    ];
+    for (const c of corners) {
+        if (Math.abs(x - c.x) <= hs && Math.abs(y - c.y) <= hs) return c.name;
+    }
+    if (x >= r.drawX && x <= r.drawX + r.drawW && y >= r.drawY && y <= r.drawY + r.drawH) return 'body';
+    return null;
+}
+
+// ---------- Draw video dengan transform ----------
+function drawVideoTransformed(context, video, prefix) {
+    const w = canvas.width, h = canvas.height;
+    const vw = video.videoWidth || w;
+    const vh = video.videoHeight || h;
+    const scale = parseFloat($(prefix + '-scale').value) / 100;
+    const offsetX = parseFloat($(prefix + '-x').value);
+    const offsetY = parseFloat($(prefix + '-y').value);
+    const fitRatio = Math.min(w / vw, h / vh);
+    const baseW = vw * fitRatio;
+    const baseH = vh * fitRatio;
+    const drawW = baseW * scale;
+    const drawH = baseH * scale;
+    const drawX = (w - drawW) / 2 + offsetX;
+    const drawY = (h - drawH) / 2 + offsetY;
     context.drawImage(video, drawX, drawY, drawW, drawH);
 }
 
@@ -273,12 +301,10 @@ function drawFrame() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
 
-    // 1. Video belakang (dengan transform)
     if (backLoaded && videoBack.readyState >= 2) {
         drawVideoTransformed(ctx, videoBack, 'back');
     }
 
-    // 2. Video depan (dengan transform, rect mask, dan eraser)
     if (frontLoaded && videoFront.readyState >= 2) {
         offCtx.clearRect(0, 0, w, h);
         offCtx.save();
@@ -300,19 +326,17 @@ function drawFrame() {
         drawVideoTransformed(offCtx, videoFront, 'front');
         offCtx.restore();
 
-        // Terapkan eraser mask
         offCtx.globalCompositeOperation = 'destination-out';
         offCtx.drawImage(maskCanvas, 0, 0);
         offCtx.globalCompositeOperation = 'source-over';
 
         ctx.drawImage(offCanvas, 0, 0);
 
-        // Panduan garis kotak
         if ($('rect-enabled').checked) {
             const mx = +$('mx').value, my = +$('my').value;
             const mw = +$('mw').value, mh = +$('mh').value, mr = +$('mr').value;
             ctx.save();
-            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
             ctx.lineWidth = 2;
             ctx.setLineDash([8, 6]);
             ctx.beginPath();
@@ -321,6 +345,41 @@ function drawFrame() {
             ctx.restore();
         }
     }
+
+    // Gambar handle transform jika mode aktif
+    drawTransformHandles();
+}
+
+function drawTransformHandles() {
+    if (currentTool !== 'transform' || !frontLoaded) return;
+    const r = getFrontRect();
+    const hs = getHandleSizeCanvas();
+
+    ctx.save();
+    // Border kotak video depan
+    ctx.strokeStyle = '#9c27b0';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(r.drawX, r.drawY, r.drawW, r.drawH);
+    ctx.setLineDash([]);
+
+    // Handle 4 sudut
+    const corners = [
+        { x: r.drawX, y: r.drawY },
+        { x: r.drawX + r.drawW, y: r.drawY },
+        { x: r.drawX, y: r.drawY + r.drawH },
+        { x: r.drawX + r.drawW, y: r.drawY + r.drawH },
+    ];
+    ctx.fillStyle = '#9c27b0';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    corners.forEach(c => {
+        ctx.beginPath();
+        ctx.rect(c.x - hs / 2, c.y - hs / 2, hs, hs);
+        ctx.fill();
+        ctx.stroke();
+    });
+    ctx.restore();
 }
 
 function renderLoop() {
@@ -346,7 +405,6 @@ function paintMask(x, y, prevX, prevY) {
     maskCtx.lineWidth = eraserSize;
     maskCtx.lineCap = 'round';
     maskCtx.lineJoin = 'round';
-
     if (prevX !== null) {
         maskCtx.beginPath();
         maskCtx.moveTo(prevX, prevY);
@@ -357,6 +415,23 @@ function paintMask(x, y, prevX, prevY) {
     maskCtx.arc(x, y, eraserSize / 2, 0, Math.PI * 2);
     maskCtx.fill();
     maskCtx.restore();
+}
+
+// ---------- Slider setter + label ----------
+function setSliderValue(id, val, isFloat = false) {
+    const el = $(id);
+    let v = isFloat ? parseFloat(val) : Math.round(val);
+    v = Math.max(parseFloat(el.min), Math.min(parseFloat(el.max), v));
+    el.value = v;
+    updateSliderLabel(id);
+}
+
+function updateSliderLabel(id) {
+    const el = $(id);
+    const label = $(id + '-v');
+    if (!label) return;
+    if (id.endsWith('-scale')) label.textContent = Math.round(parseFloat(el.value)) + '%';
+    else label.textContent = Math.round(parseFloat(el.value)) + ' px';
 }
 
 // ---------- Load video ----------
@@ -374,21 +449,17 @@ function loadVideoFile(file, videoEl, boxId) {
 
 function whenBothLoaded() {
     if (!backLoaded || !frontLoaded) return;
-
     const maxW = 1280;
     const ratio = videoBack.videoWidth / videoBack.videoHeight;
     let w = Math.min(videoBack.videoWidth || maxW, maxW);
     let h = Math.round(w / ratio);
     resizeCanvases(w, h);
-
     ['btn-play', 'btn-pause', 'btn-reset', 'btn-export', 'btn-clear-eraser',
      'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = false);
-
     drawFrame();
-    setStatus('✅ Video siap. Gunakan panel Transform untuk mengubah ukuran/posisi, atau Eraser untuk mengikis.', 'success');
+    setStatus('✅ Video siap. Pilih "Transform" lalu tarik handle sudut / bagian tengah video depan.', 'success');
 }
 
-// ---------- File inputs ----------
 $('file-back').onchange = async (e) => {
     if (!e.target.files[0]) return;
     try {
@@ -413,52 +484,125 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
         currentTool = btn.dataset.tool;
         document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        updateCursorStyle();
+        cursorOverlay.style.display = 'none';
+        dragState = null;
+        isDrawing = false;
         if (currentTool === 'view') {
-            cursorOverlay.style.display = 'none';
-            setStatus('Mode Lihat. Pilih Eraser atau Restore untuk mulai mengedit.');
+            canvas.style.cursor = 'default';
+            setStatus('Mode Lihat.');
+        } else if (currentTool === 'transform') {
+            canvas.style.cursor = 'default';
+            setStatus('Mode Transform: tarik handle sudut untuk mengubah ukuran, atau seret bagian tengah untuk memindahkan.', 'warning');
         } else if (currentTool === 'erase') {
-            setStatus('Mode Eraser aktif. Seret di atas video untuk mengikis video depan.', 'warning');
-        } else {
+            canvas.style.cursor = 'crosshair';
+            setStatus('Mode Eraser aktif. Seret di atas video untuk mengikis.', 'warning');
+        } else if (currentTool === 'restore') {
+            canvas.style.cursor = 'crosshair';
             setStatus('Mode Restore aktif. Seret untuk mengembalikan bagian yang terhapus.', 'success');
         }
+        if (!rafId) drawFrame();
     });
 });
 
-function updateCursorStyle() {
-    canvas.style.cursor = currentTool === 'view' ? 'default' : 'crosshair';
-}
-
-// ---------- Mouse/touch ----------
+// ---------- Pointer handlers ----------
 function onPointerDown(e) {
-    if (currentTool === 'view' || !backLoaded || !frontLoaded || isExporting) return;
+    if (!backLoaded || !frontLoaded || isExporting) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const { x, y } = getCanvasCoords(clientX, clientY);
+
+    if (currentTool === 'transform') {
+        const hit = hitTest(x, y);
+        if (!hit) return;
+        e.preventDefault();
+        const r = getFrontRect();
+        dragState = {
+            handle: hit,
+            startX: x, startY: y,
+            startScale: parseFloat($('front-scale').value),
+            startOffsetX: parseFloat($('front-x').value),
+            startOffsetY: parseFloat($('front-y').value),
+            startDrawX: r.drawX, startDrawY: r.drawY,
+            startDrawW: r.drawW, startDrawH: r.drawH,
+            baseW: r.baseW, baseH: r.baseH,
+        };
+        return;
+    }
+
+    if (currentTool === 'view') return;
     e.preventDefault();
     isDrawing = true;
-    const { x, y } = getCanvasCoords(
-        e.touches ? e.touches[0].clientX : e.clientX,
-        e.touches ? e.touches[0].clientY : e.clientY
-    );
     lastX = x; lastY = y;
     paintMask(x, y, null, null);
     if (!rafId) drawFrame();
 }
 
 function onPointerMove(e) {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const { x, y } = getCanvasCoords(clientX, clientY);
+
+    // Drag transform
+    if (dragState) {
+        e.preventDefault();
+        const ds = dragState;
+        if (ds.handle === 'body') {
+            setSliderValue('front-x', ds.startOffsetX + (x - ds.startX));
+            setSliderValue('front-y', ds.startOffsetY + (y - ds.startY));
+        } else {
+            const dx = x - ds.startX;
+            const dy = y - ds.startY;
+            const newW = ds.startDrawW + dx;
+            const newH = ds.startDrawH + dy;
+            const ratioW = newW / ds.startDrawW;
+            const ratioH = newH / ds.startDrawH;
+            const ratio = Math.abs(ratioW - 1) > Math.abs(ratioH - 1) ? ratioW : ratioH;
+            let newScale = ds.startScale * ratio;
+            newScale = Math.max(10, Math.min(500, newScale));
+
+            let anchorX, anchorY;
+            if (ds.handle === 'br') { anchorX = ds.startDrawX; anchorY = ds.startDrawY; }
+            else if (ds.handle === 'tl') { anchorX = ds.startDrawX + ds.startDrawW; anchorY = ds.startDrawY + ds.startDrawH; }
+            else if (ds.handle === 'tr') { anchorX = ds.startDrawX; anchorY = ds.startDrawY + ds.startDrawH; }
+            else { anchorX = ds.startDrawX + ds.startDrawW; anchorY = ds.startDrawY; }
+
+            const newDrawW = ds.baseW * (newScale / 100);
+            const newDrawH = ds.baseH * (newScale / 100);
+            const w = canvas.width, h = canvas.height;
+
+            let newDrawX, newDrawY;
+            if (ds.handle === 'br') { newDrawX = anchorX; newDrawY = anchorY; }
+            else if (ds.handle === 'tl') { newDrawX = anchorX - newDrawW; newDrawY = anchorY - newDrawH; }
+            else if (ds.handle === 'tr') { newDrawX = anchorX; newDrawY = anchorY - newDrawH; }
+            else { newDrawX = anchorX - newDrawW; newDrawY = anchorY; }
+
+            setSliderValue('front-scale', newScale, true);
+            setSliderValue('front-x', newDrawX - (w - newDrawW) / 2);
+            setSliderValue('front-y', newDrawY - (h - newDrawH) / 2);
+        }
+        drawFrame();
+        return;
+    }
+
+    // Hover cursor transform
+    if (currentTool === 'transform') {
+        const hit = hitTest(x, y);
+        const cursors = { tl: 'nwse-resize', tr: 'nesw-resize', bl: 'nesw-resize', br: 'nwse-resize', body: 'move' };
+        canvas.style.cursor = hit ? cursors[hit] : 'default';
+        return;
+    }
+
+    // Eraser hover + paint
     if (currentTool !== 'view' && backLoaded && frontLoaded) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         const scale = rect.width / canvas.width;
         const sizeCss = eraserSize * scale;
-
         cursorOverlay.style.width = sizeCss + 'px';
         cursorOverlay.style.height = sizeCss + 'px';
         cursorOverlay.style.left = (clientX - rect.left - sizeCss / 2) + 'px';
         cursorOverlay.style.top = (clientY - rect.top - sizeCss / 2) + 'px';
         cursorOverlay.classList.toggle('restore', currentTool === 'restore');
-
-        const inside = clientX >= rect.left && clientX <= rect.right &&
-                       clientY >= rect.top && clientY <= rect.bottom;
+        const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
         cursorOverlay.style.display = inside ? 'block' : 'none';
     } else {
         cursorOverlay.style.display = 'none';
@@ -466,21 +610,21 @@ function onPointerMove(e) {
 
     if (!isDrawing) return;
     e.preventDefault();
-    const { x, y } = getCanvasCoords(
-        e.touches ? e.touches[0].clientX : e.clientX,
-        e.touches ? e.touches[0].clientY : e.clientY
-    );
     paintMask(x, y, lastX, lastY);
     lastX = x; lastY = y;
     if (!rafId) drawFrame();
 }
 
-function onPointerUp() { isDrawing = false; lastX = null; lastY = null; }
+function onPointerUp() {
+    isDrawing = false;
+    lastX = null; lastY = null;
+    dragState = null;
+}
 
 canvas.addEventListener('mousedown', onPointerDown);
 canvas.addEventListener('mousemove', onPointerMove);
 window.addEventListener('mouseup', onPointerUp);
-canvas.addEventListener('mouseleave', () => { if (currentTool !== 'view') cursorOverlay.style.display = 'none'; });
+canvas.addEventListener('mouseleave', () => { if (currentTool !== 'view' && currentTool !== 'transform') cursorOverlay.style.display = 'none'; });
 canvas.addEventListener('touchstart', onPointerDown, { passive: false });
 canvas.addEventListener('touchmove', onPointerMove, { passive: false });
 canvas.addEventListener('touchend', onPointerUp);
@@ -495,13 +639,11 @@ $('btn-play').onclick = async () => {
         setStatus('▶ Memutar...');
     } catch (err) { setStatus('❌ ' + err.message, 'error'); }
 };
-
 $('btn-pause').onclick = () => {
     videoBack.pause(); videoFront.pause();
     stopLoop(); drawFrame();
     setStatus('⏸ Dijeda.');
 };
-
 $('btn-reset').onclick = () => {
     videoBack.pause(); videoFront.pause();
     videoBack.currentTime = 0; videoFront.currentTime = 0;
@@ -509,27 +651,23 @@ $('btn-reset').onclick = () => {
     setStatus('↺ Video di-reset.');
 };
 
-// ---------- Clear eraser ----------
 $('btn-clear-eraser').onclick = () => {
     maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
     if (!rafId) drawFrame();
     setStatus('🧹 Semua coretan eraser dibersihkan.', 'success');
 };
 
-// ---------- Reset transform ----------
 function resetTransform(prefix) {
     $(prefix + '-scale').value = 100;
     $(prefix + '-x').value = 0;
     $(prefix + '-y').value = 0;
-    $(prefix + '-scale-v').textContent = '100%';
-    $(prefix + '-x-v').textContent = '0 px';
-    $(prefix + '-y-v').textContent = '0 px';
+    ['scale', 'x', 'y'].forEach(k => updateSliderLabel(prefix + '-' + k));
     if (!rafId) drawFrame();
 }
 $('btn-reset-back').onclick = () => { resetTransform('back'); setStatus('🖼 Transform video belakang di-reset.', 'success'); };
 $('btn-reset-front').onclick = () => { resetTransform('front'); setStatus('🎭 Transform video depan di-reset.', 'success'); };
 
-// ---------- Slider updates ----------
+// ---------- Slider events ----------
 ['mx', 'my', 'mw', 'mh', 'mr'].forEach(id => {
     $(id).addEventListener('input', () => {
         $(id + '-v').textContent = $(id).value + ' px';
@@ -561,14 +699,12 @@ $('invert').addEventListener('change', () => { if (!rafId) drawFrame(); });
 $('btn-export').onclick = async () => {
     if (isExporting) return;
     if (!window.MediaRecorder) { setStatus('❌ Browser tidak mendukung MediaRecorder.', 'error'); return; }
-
     const duration = Math.min(videoBack.duration, videoFront.duration);
     if (!isFinite(duration) || duration <= 0) { setStatus('❌ Durasi video tidak valid.', 'error'); return; }
 
     isExporting = true;
-    ['btn-export', 'btn-play', 'btn-pause', 'btn-reset', 'btn-clear-eraser',
-     'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = true);
-    setStatus(`🔴 Merekam ${duration.toFixed(1)} detik... Jangan tutup tab ini.`);
+    ['btn-export', 'btn-play', 'btn-pause', 'btn-reset', 'btn-clear-eraser', 'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = true);
+    setStatus(`🔴 Merekam ${duration.toFixed(1)} detik...`);
 
     const stream = canvas.captureStream(30);
     let mimeType = 'video/webm;codecs=vp9';
@@ -586,11 +722,14 @@ $('btn-export').onclick = async () => {
         a.download = 'video-mask-' + Date.now() + '.webm';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 2000);
-        setStatus('✅ Export selesai! File telah diunduh.', 'success');
+        setStatus('✅ Export selesai!', 'success');
         isExporting = false;
-        ['btn-export', 'btn-play', 'btn-pause', 'btn-reset', 'btn-clear-eraser',
-         'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = false);
+        ['btn-export', 'btn-play', 'btn-pause', 'btn-reset', 'btn-clear-eraser', 'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = false);
     };
+
+    // Sembunyikan handle saat export
+    const prevTool = currentTool;
+    currentTool = 'view';
 
     videoBack.currentTime = 0; videoFront.currentTime = 0;
     await Promise.all([videoBack.play(), videoFront.play()]);
@@ -601,13 +740,13 @@ $('btn-export').onclick = async () => {
         if (recorder.state === 'recording') recorder.stop();
         videoBack.pause(); videoFront.pause();
         stopLoop();
+        currentTool = prevTool;
     };
     videoBack.onended = stopRecording;
     setTimeout(stopRecording, duration * 1000 + 300);
 };
 
 // ---------- Init ----------
-updateCursorStyle();
 drawFrame();
 </script>
 </body>
