@@ -1,221 +1,614 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Mask Editor (Lengkap)</title>
-    <style>
-        body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f0f2f5; margin: 0; }
-        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 950px; }
-        h1 { text-align: center; color: #1a1a1a; margin-top: 0; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .upload-box { border: 2px dashed #ccc; padding: 15px; text-align: center; border-radius: 8px; }
-        input[type="file"] { display: block; margin: 10px auto; width: 100%; }
-        #player-container { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        #player { /* Ini adalah div tempat canvas akan ditempelkan */ }
-        #player canvas { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
-        .mask-controls { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-        .slider-group { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .slider-group label { min-width: 140px; font-weight: 500; }
-        input[type="range"] { flex-grow: 1; }
-        button { padding: 10px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { background: #0056b3; }
-        .status { margin-top: 10px; font-size: 14px; color: #666; text-align: center; min-height: 20px; }
-        .error { color: #d32f2f; font-weight: 600; }
-        .success { color: #2e7d32; font-weight: 600; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Mask & Eraser Editor</title>
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background: #f0f2f5; margin: 0; }
+    .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { margin-top: 0; text-align: center; }
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .upload-box { border: 2px dashed #ccc; padding: 16px; border-radius: 8px; transition: all 0.2s; }
+    .upload-box.filled { border-color: #4caf50; background: #f1f8f4; }
+    .upload-box strong { display: block; margin-bottom: 8px; }
+    input[type="file"] { width: 100%; font-size: 14px; }
+    #canvas-wrap { position: relative; background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 16/9; margin-bottom: 16px; user-select: none; }
+    canvas { width: 100%; height: 100%; display: block; object-fit: contain; }
+    #cursor-overlay { position: absolute; pointer-events: none; border: 2px dashed #ff1744; border-radius: 50%; display: none; box-shadow: 0 0 0 1px rgba(255,255,255,0.6); background: rgba(255,23,68,0.08); }
+    #cursor-overlay.restore { border-color: #00e676; background: rgba(0,230,118,0.08); }
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    button { padding: 10px 20px; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; background: #007bff; color: #fff; }
+    button:hover:not(:disabled) { background: #0056b3; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    button.secondary { background: #6c757d; }
+    button.secondary:hover:not(:disabled) { background: #545b62; }
+    button.warn { background: #ff9800; }
+    button.warn:hover:not(:disabled) { background: #e68900; }
+    button.small { padding: 6px 12px; font-size: 13px; }
+    .panel { background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+    .panel h3 { margin-top: 0; margin-bottom: 12px; }
+    .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .slider-row label { min-width: 150px; font-weight: 500; font-size: 14px; }
+    .slider-row input[type="range"] { flex: 1; }
+    .slider-row span { min-width: 80px; text-align: right; font-size: 14px; color: #555; font-variant-numeric: tabular-nums; }
+    .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd; }
+    .toggle-row label { font-size: 14px; }
+    .tool-selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tool-btn { padding: 10px 16px; border: 2px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.15s; color: #333; }
+    .tool-btn:hover { border-color: #999; }
+    .tool-btn.active { border-color: #007bff; background: #e3f2fd; color: #1565c0; }
+    .tool-btn.active.erase { border-color: #dc3545; background: #ffebee; color: #c62828; }
+    .tool-btn.active.restore { border-color: #28a745; background: #e8f5e9; color: #2e7d32; }
+    .status { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 14px; background: #e3f2fd; color: #1565c0; text-align: center; }
+    .status.error { background: #ffebee; color: #c62828; }
+    .status.success { background: #e8f5e9; color: #2e7d32; }
+    .status.warning { background: #fff8e1; color: #e65100; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .panel-header h3 { margin: 0; }
+    .divider { border-top: 1px solid #ddd; margin: 12px 0; }
+</style>
 </head>
 <body>
-
 <div class="container">
-    <h1>🎬 Video Mask Editor</h1>
-    <p style="text-align:center; color:#555;">Video pertama menjadi latar. Video kedua menjadi lapisan depan yang bisa "dikikis" dengan mask persegi.</p>
+    <h1>🎬 Video Mask & Eraser Editor</h1>
+    <p style="text-align:center; color:#555; margin-top:0;">Gunakan <strong>Eraser</strong> untuk "mengikis" video depan, atur <strong>Transform</strong> untuk mengubah ukuran/posisi, atau <strong>Rect Mask</strong> untuk area kotak.</p>
+
+    <div class="upload-grid">
+        <div class="upload-box" id="box-back">
+            <strong>1. Video Latar (Belakang)</strong>
+            <input type="file" id="file-back" accept="video/*">
+        </div>
+        <div class="upload-box" id="box-front">
+            <strong>2. Video Depan (Akan di-Mask)</strong>
+            <input type="file" id="file-front" accept="video/*">
+        </div>
+    </div>
+
+    <div class="tool-selector">
+        <button class="tool-btn active" data-tool="view">👁 Lihat Saja</button>
+        <button class="tool-btn erase" data-tool="erase">🧽 Eraser (Hapus)</button>
+        <button class="tool-btn restore" data-tool="restore">↩ Restore (Kembalikan)</button>
+    </div>
+
+    <div id="canvas-wrap">
+        <canvas id="canvas" width="1280" height="720"></canvas>
+        <div id="cursor-overlay"></div>
+    </div>
 
     <div class="controls">
-        <div class="upload-box">
-            <strong>1. Video Latar (Belakang)</strong>
-            <input type="file" id="video-back" accept="video/mp4,video/webm,video/quicktime">
+        <button id="btn-play" disabled>▶ Play</button>
+        <button id="btn-pause" disabled class="secondary">⏸ Pause</button>
+        <button id="btn-reset" disabled class="secondary">↺ Reset</button>
+        <button id="btn-export" disabled class="secondary">⬇ Export WebM</button>
+    </div>
+
+    <!-- Panel Transform Video Belakang -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3>🖼 Transform Video Belakang</h3>
+            <button id="btn-reset-back" class="secondary small" disabled>↺ Reset</button>
         </div>
-        <div class="upload-box">
-            <strong>2. Video Depan (Akan di-Mask)</strong>
-            <input type="file" id="video-front" accept="video/mp4,video/webm,video/quicktime">
+        <div class="slider-row">
+            <label>Skala</label>
+            <input type="range" id="back-scale" min="10" max="300" value="100">
+            <span id="back-scale-v">100%</span>
+        </div>
+        <div class="slider-row">
+            <label>Geser X</label>
+            <input type="range" id="back-x" min="-1280" max="1280" value="0">
+            <span id="back-x-v">0 px</span>
+        </div>
+        <div class="slider-row">
+            <label>Geser Y</label>
+            <input type="range" id="back-y" min="-720" max="720" value="0">
+            <span id="back-y-v">0 px</span>
         </div>
     </div>
 
-    <!-- Container untuk player -->
-    <div id="player-container">
-        <div id="player"></div>
+    <!-- Panel Transform Video Depan -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3>🎭 Transform Video Depan</h3>
+            <button id="btn-reset-front" class="secondary small" disabled>↺ Reset</button>
+        </div>
+        <div class="slider-row">
+            <label>Skala</label>
+            <input type="range" id="front-scale" min="10" max="300" value="100">
+            <span id="front-scale-v">100%</span>
+        </div>
+        <div class="slider-row">
+            <label>Geser X</label>
+            <input type="range" id="front-x" min="-1280" max="1280" value="0">
+            <span id="front-x-v">0 px</span>
+        </div>
+        <div class="slider-row">
+            <label>Geser Y</label>
+            <input type="range" id="front-y" min="-720" max="720" value="0">
+            <span id="front-y-v">0 px</span>
+        </div>
     </div>
 
-    <div class="mask-controls">
-        <h3>Pengaturan Mask (Video Depan)</h3>
-        <div class="slider-group">
-            <label for="mask-x">Posisi X (px)</label>
-            <input type="range" id="mask-x" min="0" max="1280" value="100">
-            <span id="mask-x-val">100px</span>
+    <!-- Panel Eraser -->
+    <div class="panel">
+        <h3>🧽 Pengaturan Eraser</h3>
+        <div class="slider-row">
+            <label>Ukuran Kuas</label>
+            <input type="range" id="eraser-size" min="5" max="360" value="60">
+            <span id="eraser-size-v">60 px</span>
         </div>
-        <div class="slider-group">
-            <label for="mask-y">Posisi Y (px)</label>
-            <input type="range" id="mask-y" min="0" max="720" value="100">
-            <span id="mask-y-val">100px</span>
+        <div class="controls" style="margin-bottom:0; margin-top:12px;">
+            <button id="btn-clear-eraser" class="warn" disabled>🧹 Bersihkan Semua Eraser</button>
+            <span style="font-size:14px; color:#666;">Tahan mouse dan seret untuk mengikis. Pilih "Restore" untuk mengembalikan.</span>
         </div>
-        <div class="slider-group">
-            <label for="mask-width">Lebar Mask (px)</label>
-            <input type="range" id="mask-width" min="50" max="1280" value="800">
-            <span id="mask-width-val">800px</span>
-        </div>
-        <div class="slider-group">
-            <label for="mask-height">Tinggi Mask (px)</label>
-            <input type="range" id="mask-height" min="50" max="720" value="500">
-            <span id="mask-height-val">500px</span>
-        </div>
-        <div class="slider-group">
-            <label for="mask-radius">Sudut Melengkung (px)</label>
-            <input type="range" id="mask-radius" min="0" max="200" value="0">
-            <span id="mask-radius-val">0px</span>
-        </div>
-        <button id="apply-btn">Terapkan Mask</button>
-        <div class="status" id="status">Menunggu video diunggah...</div>
     </div>
+
+    <!-- Panel Rect Mask -->
+    <div class="panel">
+        <h3>🔲 Rect Mask (Kotak)</h3>
+        <div class="slider-row">
+            <label>Posisi X</label>
+            <input type="range" id="mx" min="0" max="1280" value="100">
+            <span id="mx-v">100 px</span>
+        </div>
+        <div class="slider-row">
+            <label>Posisi Y</label>
+            <input type="range" id="my" min="0" max="720" value="100">
+            <span id="my-v">100 px</span>
+        </div>
+        <div class="slider-row">
+            <label>Lebar</label>
+            <input type="range" id="mw" min="50" max="1280" value="600">
+            <span id="mw-v">600 px</span>
+        </div>
+        <div class="slider-row">
+            <label>Tinggi</label>
+            <input type="range" id="mh" min="50" max="720" value="400">
+            <span id="mh-v">400 px</span>
+        </div>
+        <div class="slider-row">
+            <label>Sudut Melengkung</label>
+            <input type="range" id="mr" min="0" max="200" value="0">
+            <span id="mr-v">0 px</span>
+        </div>
+        <div class="toggle-row">
+            <input type="checkbox" id="rect-enabled" checked>
+            <label for="rect-enabled">Aktifkan batas kotak (video depan hanya muncul di dalam kotak)</label>
+        </div>
+        <div class="toggle-row">
+            <input type="checkbox" id="invert">
+            <label for="invert">Balik mask kotak (video belakang muncul di dalam kotak)</label>
+        </div>
+    </div>
+
+    <div class="status" id="status">Unggah kedua video untuk memulai.</div>
 </div>
 
-<script type="module">
-    import * as core from 'https://cdn.jsdelivr.net/npm/@diffusionstudio/core@4/+esm';
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d');
+const maskCanvas = document.createElement('canvas');
+const maskCtx = maskCanvas.getContext('2d');
+const offCanvas = document.createElement('canvas');
+const offCtx = offCanvas.getContext('2d');
+const cursorOverlay = $('cursor-overlay');
 
-    const playerDiv = document.getElementById('player');
-    const statusDiv = document.getElementById('status');
+const videoBack = document.createElement('video');
+const videoFront = document.createElement('video');
+[videoBack, videoFront].forEach(v => { v.muted = true; v.playsInline = true; });
 
-    let fileBack = null;
-    let fileFront = null;
-    let composition = null;
-    let frontClip = null;
+let backLoaded = false, frontLoaded = false;
+let rafId = null;
+let isExporting = false;
+let currentTool = 'view';
+let eraserSize = 60;
+let isDrawing = false;
+let lastX = null, lastY = null;
 
-    const COMP_WIDTH = 1280;
-    const COMP_HEIGHT = 720;
+// ---------- Util ----------
+function setStatus(msg, type = '') {
+    const el = $('status');
+    el.textContent = msg;
+    el.className = 'status' + (type ? ' ' + type : '');
+}
 
-    // Cek prasyarat lingkungan
-    if (typeof SharedArrayBuffer === 'undefined') {
-        statusDiv.textContent = "⚠️ SharedArrayBuffer tidak tersedia. Pastikan halaman dijalankan melalui server lokal (lihat instruksi di bawah).";
-        statusDiv.classList.add('error');
+function roundedRectPath(c, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    if (r <= 0) { c.rect(x, y, w, h); return; }
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r);
+    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r);
+    c.quadraticCurveTo(x, y, x + r, y);
+    c.closePath();
+}
+
+function resizeCanvases(w, h) {
+    canvas.width = w; canvas.height = h;
+    maskCanvas.width = w; maskCanvas.height = h;
+    offCanvas.width = w; offCanvas.height = h;
+    maskCtx.clearRect(0, 0, w, h);
+    $('eraser-size').max = Math.min(w, h);
+    ['mx', 'mw'].forEach(id => $(id).max = w);
+    ['my', 'mh'].forEach(id => $(id).max = h);
+    $('mr').max = Math.min(w, h) / 2;
+    ['back', 'front'].forEach(p => {
+        $(p + '-x').min = -w; $(p + '-x').max = w;
+        $(p + '-y').min = -h; $(p + '-y').max = h;
+    });
+}
+
+// ---------- Gambar video dengan transformasi ----------
+function drawVideoTransformed(context, video, prefix) {
+    const w = canvas.width, h = canvas.height;
+    const vw = video.videoWidth || w;
+    const vh = video.videoHeight || h;
+
+    const scale = parseFloat($(prefix + '-scale').value) / 100;
+    const offsetX = parseFloat($(prefix + '-x').value);
+    const offsetY = parseFloat($(prefix + '-y').value);
+
+    // Fit "contain" sebagai basis
+    const fitRatio = Math.min(w / vw, h / vh);
+    const baseW = vw * fitRatio;
+    const baseH = vh * fitRatio;
+
+    const drawW = baseW * scale;
+    const drawH = baseH * scale;
+    const drawX = (w - drawW) / 2 + offsetX;
+    const drawY = (h - drawH) / 2 + offsetY;
+
+    context.drawImage(video, drawX, drawY, drawW, drawH);
+}
+
+// ---------- Render ----------
+function drawFrame() {
+    const w = canvas.width, h = canvas.height;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+
+    // 1. Video belakang (dengan transform)
+    if (backLoaded && videoBack.readyState >= 2) {
+        drawVideoTransformed(ctx, videoBack, 'back');
     }
 
-    async function initComposition() {
-        if (!fileBack || !fileFront) return;
+    // 2. Video depan (dengan transform, rect mask, dan eraser)
+    if (frontLoaded && videoFront.readyState >= 2) {
+        offCtx.clearRect(0, 0, w, h);
+        offCtx.save();
 
-        statusDiv.textContent = "Memuat video... Mohon tunggu.";
-        statusDiv.className = 'status';
-
-        try {
-            // 1. Buat komposisi baru setiap kali, agar bersih
-            if (composition) {
-                composition.detachPlayer(playerDiv);
+        if ($('rect-enabled').checked) {
+            const mx = +$('mx').value, my = +$('my').value;
+            const mw = +$('mw').value, mh = +$('mh').value, mr = +$('mr').value;
+            offCtx.beginPath();
+            if ($('invert').checked) {
+                offCtx.rect(0, 0, w, h);
+                roundedRectPath(offCtx, mx, my, mw, mh, mr);
+                offCtx.clip('evenodd');
+            } else {
+                roundedRectPath(offCtx, mx, my, mw, mh, mr);
+                offCtx.clip();
             }
-            composition = new core.Composition({
-                width: COMP_WIDTH,
-                height: COMP_HEIGHT,
-                background: '#000000'
-            });
+        }
 
-            // 2. Muat sumber video dari File
-            //    Tipe generik <VideoSource> penting agar decoder yang tepat digunakan
-            const sourceBack = await core.Source.from<core.VideoSource>(fileBack);
-            const sourceFront = await core.Source.from<core.VideoSource>(fileFront);
+        drawVideoTransformed(offCtx, videoFront, 'front');
+        offCtx.restore();
 
-            // 3. Buat klip video
-            const backClip = new core.VideoClip(sourceBack, {
-                position: 'center',
-                height: '100%',
-                width: '100%'
-            });
-            frontClip = new core.VideoClip(sourceFront, {
-                position: 'center',
-                height: '100%',
-                width: '100%'
-            });
+        // Terapkan eraser mask
+        offCtx.globalCompositeOperation = 'destination-out';
+        offCtx.drawImage(maskCanvas, 0, 0);
+        offCtx.globalCompositeOperation = 'source-over';
 
-            // 4. Susun layer: belakang dulu, lalu depan
-            const layerBack = new core.Layer();
-            await composition.add(layerBack);
-            await layerBack.add(backClip);
+        ctx.drawImage(offCanvas, 0, 0);
 
-            const layerFront = new core.Layer();
-            await composition.add(layerFront);
-            await layerFront.add(frontClip);
-
-            // 5. Tempelkan player ke DOM (INI KUNCI UNTUK MENAMPILKAN VIDEO)
-            composition.attachPlayer(playerDiv);
-
-            // 6. Mulai pemutaran
-            await composition.play();
-
-            // 7. Terapkan mask awal
-            applyMaskFromSliders();
-
-            statusDiv.textContent = "✅ Video berhasil dimuat! Atur slider untuk mengikis lapisan depan.";
-            statusDiv.classList.add('success');
-
-        } catch (err) {
-            console.error("Gagal memuat komposisi:", err);
-            statusDiv.textContent = "❌ Gagal memuat video: " + err.message;
-            statusDiv.classList.add('error');
-            // Tampilkan detail tambahan jika ada
-            if (err.stack) console.error(err.stack);
+        // Panduan garis kotak
+        if ($('rect-enabled').checked) {
+            const mx = +$('mx').value, my = +$('my').value;
+            const mw = +$('mw').value, mh = +$('mh').value, mr = +$('mr').value;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            roundedRectPath(ctx, mx, my, mw, mh, mr);
+            ctx.stroke();
+            ctx.restore();
         }
     }
+}
 
-    function applyMaskFromSliders() {
-        if (!frontClip || !composition) return;
+function renderLoop() {
+    drawFrame();
+    rafId = requestAnimationFrame(renderLoop);
+}
+function startLoop() { if (rafId) cancelAnimationFrame(rafId); rafId = requestAnimationFrame(renderLoop); }
+function stopLoop() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
 
-        const x = parseInt(document.getElementById('mask-x').value, 10);
-        const y = parseInt(document.getElementById('mask-y').value, 10);
-        const w = parseInt(document.getElementById('mask-width').value, 10);
-        const h = parseInt(document.getElementById('mask-height').value, 10);
-        const r = parseInt(document.getElementById('mask-radius').value, 10);
+// ---------- Paint mask ----------
+function getCanvasCoords(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
 
-        // Pastikan mask tidak keluar dari batas komposisi
-        const safeX = Math.max(0, Math.min(x, COMP_WIDTH - 10));
-        const safeY = Math.max(0, Math.min(y, COMP_HEIGHT - 10));
-        const safeW = Math.max(10, Math.min(w, COMP_WIDTH - safeX));
-        const safeH = Math.max(10, Math.min(h, COMP_HEIGHT - safeY));
+function paintMask(x, y, prevX, prevY) {
+    maskCtx.save();
+    maskCtx.globalCompositeOperation = currentTool === 'erase' ? 'source-over' : 'destination-out';
+    maskCtx.fillStyle = '#000';
+    maskCtx.strokeStyle = '#000';
+    maskCtx.lineWidth = eraserSize;
+    maskCtx.lineCap = 'round';
+    maskCtx.lineJoin = 'round';
 
-        frontClip.mask = new core.RectangleMask({
-            x: safeX,
-            y: safeY,
-            width: safeW,
-            height: safeH,
-            radius: r
-        });
+    if (prevX !== null) {
+        maskCtx.beginPath();
+        maskCtx.moveTo(prevX, prevY);
+        maskCtx.lineTo(x, y);
+        maskCtx.stroke();
+    }
+    maskCtx.beginPath();
+    maskCtx.arc(x, y, eraserSize / 2, 0, Math.PI * 2);
+    maskCtx.fill();
+    maskCtx.restore();
+}
 
-        statusDiv.textContent = `Mask diterapkan: Posisi (${safeX}, ${safeY}), Ukuran ${safeW}×${safeH}px.`;
-        statusDiv.className = 'status success';
+// ---------- Load video ----------
+function loadVideoFile(file, videoEl, boxId) {
+    return new Promise((resolve, reject) => {
+        if (videoEl.src) URL.revokeObjectURL(videoEl.src);
+        videoEl.src = URL.createObjectURL(file);
+        videoEl.onloadedmetadata = () => {
+            document.getElementById(boxId).classList.add('filled');
+            resolve(videoEl);
+        };
+        videoEl.onerror = () => reject(new Error('Gagal memuat: ' + file.name));
+    });
+}
+
+function whenBothLoaded() {
+    if (!backLoaded || !frontLoaded) return;
+
+    const maxW = 1280;
+    const ratio = videoBack.videoWidth / videoBack.videoHeight;
+    let w = Math.min(videoBack.videoWidth || maxW, maxW);
+    let h = Math.round(w / ratio);
+    resizeCanvases(w, h);
+
+    ['btn-play', 'btn-pause', 'btn-reset', 'btn-export', 'btn-clear-eraser',
+     'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = false);
+
+    drawFrame();
+    setStatus('✅ Video siap. Gunakan panel Transform untuk mengubah ukuran/posisi, atau Eraser untuk mengikis.', 'success');
+}
+
+// ---------- File inputs ----------
+$('file-back').onchange = async (e) => {
+    if (!e.target.files[0]) return;
+    try {
+        await loadVideoFile(e.target.files[0], videoBack, 'box-back');
+        backLoaded = true;
+        whenBothLoaded();
+    } catch (err) { setStatus('❌ ' + err.message, 'error'); }
+};
+
+$('file-front').onchange = async (e) => {
+    if (!e.target.files[0]) return;
+    try {
+        await loadVideoFile(e.target.files[0], videoFront, 'box-front');
+        frontLoaded = true;
+        whenBothLoaded();
+    } catch (err) { setStatus('❌ ' + err.message, 'error'); }
+};
+
+// ---------- Tool selector ----------
+document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentTool = btn.dataset.tool;
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateCursorStyle();
+        if (currentTool === 'view') {
+            cursorOverlay.style.display = 'none';
+            setStatus('Mode Lihat. Pilih Eraser atau Restore untuk mulai mengedit.');
+        } else if (currentTool === 'erase') {
+            setStatus('Mode Eraser aktif. Seret di atas video untuk mengikis video depan.', 'warning');
+        } else {
+            setStatus('Mode Restore aktif. Seret untuk mengembalikan bagian yang terhapus.', 'success');
+        }
+    });
+});
+
+function updateCursorStyle() {
+    canvas.style.cursor = currentTool === 'view' ? 'default' : 'crosshair';
+}
+
+// ---------- Mouse/touch ----------
+function onPointerDown(e) {
+    if (currentTool === 'view' || !backLoaded || !frontLoaded || isExporting) return;
+    e.preventDefault();
+    isDrawing = true;
+    const { x, y } = getCanvasCoords(
+        e.touches ? e.touches[0].clientX : e.clientX,
+        e.touches ? e.touches[0].clientY : e.clientY
+    );
+    lastX = x; lastY = y;
+    paintMask(x, y, null, null);
+    if (!rafId) drawFrame();
+}
+
+function onPointerMove(e) {
+    if (currentTool !== 'view' && backLoaded && frontLoaded) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const scale = rect.width / canvas.width;
+        const sizeCss = eraserSize * scale;
+
+        cursorOverlay.style.width = sizeCss + 'px';
+        cursorOverlay.style.height = sizeCss + 'px';
+        cursorOverlay.style.left = (clientX - rect.left - sizeCss / 2) + 'px';
+        cursorOverlay.style.top = (clientY - rect.top - sizeCss / 2) + 'px';
+        cursorOverlay.classList.toggle('restore', currentTool === 'restore');
+
+        const inside = clientX >= rect.left && clientX <= rect.right &&
+                       clientY >= rect.top && clientY <= rect.bottom;
+        cursorOverlay.style.display = inside ? 'block' : 'none';
+    } else {
+        cursorOverlay.style.display = 'none';
     }
 
-    // Event listener untuk input file
-    document.getElementById('video-back').addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            fileBack = e.target.files[0];
-            initComposition();
-        }
+    if (!isDrawing) return;
+    e.preventDefault();
+    const { x, y } = getCanvasCoords(
+        e.touches ? e.touches[0].clientX : e.clientX,
+        e.touches ? e.touches[0].clientY : e.clientY
+    );
+    paintMask(x, y, lastX, lastY);
+    lastX = x; lastY = y;
+    if (!rafId) drawFrame();
+}
+
+function onPointerUp() { isDrawing = false; lastX = null; lastY = null; }
+
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('mouseleave', () => { if (currentTool !== 'view') cursorOverlay.style.display = 'none'; });
+canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+canvas.addEventListener('touchend', onPointerUp);
+
+// ---------- Play/Pause/Reset ----------
+$('btn-play').onclick = async () => {
+    try {
+        if (videoBack.ended) videoBack.currentTime = 0;
+        if (videoFront.ended) videoFront.currentTime = 0;
+        await Promise.all([videoBack.play(), videoFront.play()]);
+        startLoop();
+        setStatus('▶ Memutar...');
+    } catch (err) { setStatus('❌ ' + err.message, 'error'); }
+};
+
+$('btn-pause').onclick = () => {
+    videoBack.pause(); videoFront.pause();
+    stopLoop(); drawFrame();
+    setStatus('⏸ Dijeda.');
+};
+
+$('btn-reset').onclick = () => {
+    videoBack.pause(); videoFront.pause();
+    videoBack.currentTime = 0; videoFront.currentTime = 0;
+    stopLoop(); drawFrame();
+    setStatus('↺ Video di-reset.');
+};
+
+// ---------- Clear eraser ----------
+$('btn-clear-eraser').onclick = () => {
+    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    if (!rafId) drawFrame();
+    setStatus('🧹 Semua coretan eraser dibersihkan.', 'success');
+};
+
+// ---------- Reset transform ----------
+function resetTransform(prefix) {
+    $(prefix + '-scale').value = 100;
+    $(prefix + '-x').value = 0;
+    $(prefix + '-y').value = 0;
+    $(prefix + '-scale-v').textContent = '100%';
+    $(prefix + '-x-v').textContent = '0 px';
+    $(prefix + '-y-v').textContent = '0 px';
+    if (!rafId) drawFrame();
+}
+$('btn-reset-back').onclick = () => { resetTransform('back'); setStatus('🖼 Transform video belakang di-reset.', 'success'); };
+$('btn-reset-front').onclick = () => { resetTransform('front'); setStatus('🎭 Transform video depan di-reset.', 'success'); };
+
+// ---------- Slider updates ----------
+['mx', 'my', 'mw', 'mh', 'mr'].forEach(id => {
+    $(id).addEventListener('input', () => {
+        $(id + '-v').textContent = $(id).value + ' px';
+        if (!rafId) drawFrame();
     });
+});
 
-    document.getElementById('video-front').addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            fileFront = e.target.files[0];
-            initComposition();
-        }
+['back', 'front'].forEach(p => {
+    $(p + '-scale').addEventListener('input', () => {
+        $(p + '-scale-v').textContent = $(p + '-scale').value + '%';
+        if (!rafId) drawFrame();
     });
-
-    document.getElementById('apply-btn').addEventListener('click', applyMaskFromSliders);
-
-    // Update label slider real-time
-    ['mask-x', 'mask-y', 'mask-width', 'mask-height', 'mask-radius'].forEach(id => {
-        const slider = document.getElementById(id);
-        const label = document.getElementById(`${id}-val`);
-        slider.addEventListener('input', () => {
-            label.textContent = slider.value + 'px';
+    ['x', 'y'].forEach(axis => {
+        $(p + '-' + axis).addEventListener('input', () => {
+            $(p + '-' + axis + '-v').textContent = $(p + '-' + axis).value + ' px';
+            if (!rafId) drawFrame();
         });
     });
+});
+
+$('eraser-size').addEventListener('input', () => {
+    eraserSize = +$('eraser-size').value;
+    $('eraser-size-v').textContent = eraserSize + ' px';
+});
+$('rect-enabled').addEventListener('change', () => { if (!rafId) drawFrame(); });
+$('invert').addEventListener('change', () => { if (!rafId) drawFrame(); });
+
+// ---------- Export ----------
+$('btn-export').onclick = async () => {
+    if (isExporting) return;
+    if (!window.MediaRecorder) { setStatus('❌ Browser tidak mendukung MediaRecorder.', 'error'); return; }
+
+    const duration = Math.min(videoBack.duration, videoFront.duration);
+    if (!isFinite(duration) || duration <= 0) { setStatus('❌ Durasi video tidak valid.', 'error'); return; }
+
+    isExporting = true;
+    ['btn-export', 'btn-play', 'btn-pause', 'btn-reset', 'btn-clear-eraser',
+     'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = true);
+    setStatus(`🔴 Merekam ${duration.toFixed(1)} detik... Jangan tutup tab ini.`);
+
+    const stream = canvas.captureStream(30);
+    let mimeType = 'video/webm;codecs=vp9';
+    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm;codecs=vp8';
+    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+
+    const chunks = [];
+    const recorder = new MediaRecorder(stream, { mimeType });
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'video-mask-' + Date.now() + '.webm';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        setStatus('✅ Export selesai! File telah diunduh.', 'success');
+        isExporting = false;
+        ['btn-export', 'btn-play', 'btn-pause', 'btn-reset', 'btn-clear-eraser',
+         'btn-reset-back', 'btn-reset-front'].forEach(id => $(id).disabled = false);
+    };
+
+    videoBack.currentTime = 0; videoFront.currentTime = 0;
+    await Promise.all([videoBack.play(), videoFront.play()]);
+    startLoop();
+    recorder.start(100);
+
+    const stopRecording = () => {
+        if (recorder.state === 'recording') recorder.stop();
+        videoBack.pause(); videoFront.pause();
+        stopLoop();
+    };
+    videoBack.onended = stopRecording;
+    setTimeout(stopRecording, duration * 1000 + 300);
+};
+
+// ---------- Init ----------
+updateCursorStyle();
+drawFrame();
 </script>
-
 </body>
 </html>
