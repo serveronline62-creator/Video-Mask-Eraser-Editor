@@ -3,202 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Mask Editor</title>
+    <title>Video Mask Editor (Lengkap)</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f0f2f5; }
-        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
-        h1 { text-align: center; color: #1a1a1a; }
+        body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f0f2f5; margin: 0; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 950px; }
+        h1 { text-align: center; color: #1a1a1a; margin-top: 0; }
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .upload-box { border: 2px dashed #ccc; padding: 15px; text-align: center; border-radius: 8px; }
-        input[type="file"] { display: block; margin: 10px auto; }
-        #preview-area { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
-        #preview-canvas { width: 100%; height: 100%; object-fit: contain; }
+        input[type="file"] { display: block; margin: 10px auto; width: 100%; }
+        #player-container { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #player { /* Ini adalah div tempat canvas akan ditempelkan */ }
+        #player canvas { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
         .mask-controls { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
         .slider-group { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .slider-group label { min-width: 120px; font-weight: 500; }
+        .slider-group label { min-width: 140px; font-weight: 500; }
         input[type="range"] { flex-grow: 1; }
         button { padding: 10px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
         button:hover { background: #0056b3; }
-        .status { margin-top: 10px; font-size: 14px; color: #666; text-align: center; }
+        .status { margin-top: 10px; font-size: 14px; color: #666; text-align: center; min-height: 20px; }
+        .error { color: #d32f2f; font-weight: 600; }
+        .success { color: #2e7d32; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🎬 Video Mask Editor</h1>
-    <p style="text-align:center; color:#555;">Unggah dua video. Video pertama akan menjadi latar belakang, video kedua akan menjadi lapisan depan yang bisa "dikikis" menggunakan mask.</p>
+    <p style="text-align:center; color:#555;">Video pertama menjadi latar. Video kedua menjadi lapisan depan yang bisa "dikikis" dengan mask persegi.</p>
 
-    <!-- Area Unggah -->
     <div class="controls">
         <div class="upload-box">
-            <strong>Video Latar (Belakang)</strong>
-            <input type="file" id="video-back" accept="video/*">
+            <strong>1. Video Latar (Belakang)</strong>
+            <input type="file" id="video-back" accept="video/mp4,video/webm,video/quicktime">
         </div>
         <div class="upload-box">
-            <strong>Video Depan (Akan di-Mask)</strong>
-            <input type="file" id="video-front" accept="video/*">
+            <strong>2. Video Depan (Akan di-Mask)</strong>
+            <input type="file" id="video-front" accept="video/mp4,video/webm,video/quicktime">
         </div>
     </div>
 
-    <!-- Area Pratinjau -->
-    <div id="preview-area">
-        <canvas id="preview-canvas"></canvas>
+    <!-- Container untuk player -->
+    <div id="player-container">
+        <div id="player"></div>
     </div>
 
-    <!-- Kontrol Mask -->
     <div class="mask-controls">
         <h3>Pengaturan Mask (Video Depan)</h3>
         <div class="slider-group">
-            <label for="mask-x">Posisi X</label>
-            <input type="range" id="mask-x" min="0" max="100" value="10">
-            <span id="mask-x-val">10%</span>
+            <label for="mask-x">Posisi X (px)</label>
+            <input type="range" id="mask-x" min="0" max="1280" value="100">
+            <span id="mask-x-val">100px</span>
         </div>
         <div class="slider-group">
-            <label for="mask-y">Posisi Y</label>
-            <input type="range" id="mask-y" min="0" max="100" value="10">
-            <span id="mask-y-val">10%</span>
+            <label for="mask-y">Posisi Y (px)</label>
+            <input type="range" id="mask-y" min="0" max="720" value="100">
+            <span id="mask-y-val">100px</span>
         </div>
         <div class="slider-group">
-            <label for="mask-width">Lebar Mask</label>
-            <input type="range" id="mask-width" min="10" max="100" value="80">
-            <span id="mask-width-val">80%</span>
+            <label for="mask-width">Lebar Mask (px)</label>
+            <input type="range" id="mask-width" min="50" max="1280" value="800">
+            <span id="mask-width-val">800px</span>
         </div>
         <div class="slider-group">
-            <label for="mask-height">Tinggi Mask</label>
-            <input type="range" id="mask-height" min="10" max="100" value="80">
-            <span id="mask-height-val">80%</span>
+            <label for="mask-height">Tinggi Mask (px)</label>
+            <input type="range" id="mask-height" min="50" max="720" value="500">
+            <span id="mask-height-val">500px</span>
         </div>
         <div class="slider-group">
-            <label for="mask-radius">Sudut Melengkung</label>
-            <input type="range" id="mask-radius" min="0" max="100" value="0">
+            <label for="mask-radius">Sudut Melengkung (px)</label>
+            <input type="range" id="mask-radius" min="0" max="200" value="0">
             <span id="mask-radius-val">0px</span>
         </div>
         <button id="apply-btn">Terapkan Mask</button>
-        <div class="status" id="status">Siap. Unggah kedua video dan atur slider.</div>
+        <div class="status" id="status">Menunggu video diunggah...</div>
     </div>
 </div>
 
-<!-- Impor Library Diffusion Studio Core -->
 <script type="module">
     import * as core from 'https://cdn.jsdelivr.net/npm/@diffusionstudio/core@4/+esm';
 
-    const canvas = document.getElementById('preview-canvas');
-    const ctx = canvas.getContext('2d');
+    const playerDiv = document.getElementById('player');
     const statusDiv = document.getElementById('status');
 
-    let videoBack = null;
-    let videoFront = null;
+    let fileBack = null;
+    let fileFront = null;
     let composition = null;
-    let backClip = null;
     let frontClip = null;
 
-    // Fungsi untuk memuat video dari file
-    function loadVideo(file, callback) {
-        const video = document.createElement('video');
-        video.src = URL.createObjectURL(file);
-        video.muted = true;
-        video.loop = true;
-        video.crossOrigin = 'anonymous';
-        video.onloadeddata = () => callback(video);
-        video.load();
+    const COMP_WIDTH = 1280;
+    const COMP_HEIGHT = 720;
+
+    // Cek prasyarat lingkungan
+    if (typeof SharedArrayBuffer === 'undefined') {
+        statusDiv.textContent = "⚠️ SharedArrayBuffer tidak tersedia. Pastikan halaman dijalankan melalui server lokal (lihat instruksi di bawah).";
+        statusDiv.classList.add('error');
     }
 
-    // Inisialisasi komposisi setelah kedua video dimuat
     async function initComposition() {
-        if (!videoBack || !videoFront) return;
+        if (!fileBack || !fileFront) return;
 
-        // 1. Buat komposisi
-        composition = new core.Composition({ width: 1280, height: 720 });
+        statusDiv.textContent = "Memuat video... Mohon tunggu.";
+        statusDiv.className = 'status';
 
-        // 2. Buat sumber video
-        const sourceBack = await core.Source.from(videoBack);
-        const sourceFront = await core.Source.from(videoFront);
+        try {
+            // 1. Buat komposisi baru setiap kali, agar bersih
+            if (composition) {
+                composition.detachPlayer(playerDiv);
+            }
+            composition = new core.Composition({
+                width: COMP_WIDTH,
+                height: COMP_HEIGHT,
+                background: '#000000'
+            });
 
-        // 3. Buat klip video
-        backClip = new core.VideoClip(sourceBack, { position: 'center', height: '100%' });
-        frontClip = new core.VideoClip(sourceFront, { position: 'center', height: '100%' });
+            // 2. Muat sumber video dari File
+            //    Tipe generik <VideoSource> penting agar decoder yang tepat digunakan
+            const sourceBack = await core.Source.from<core.VideoSource>(fileBack);
+            const sourceFront = await core.Source.from<core.VideoSource>(fileFront);
 
-        // 4. Buat layer dan tambahkan klip (video belakang dulu, lalu depan)
-        const layerBack = await composition.add(new core.Layer());
-        await layerBack.add(backClip);
+            // 3. Buat klip video
+            const backClip = new core.VideoClip(sourceBack, {
+                position: 'center',
+                height: '100%',
+                width: '100%'
+            });
+            frontClip = new core.VideoClip(sourceFront, {
+                position: 'center',
+                height: '100%',
+                width: '100%'
+            });
 
-        const layerFront = await composition.add(new core.Layer());
-        await layerFront.add(frontClip);
+            // 4. Susun layer: belakang dulu, lalu depan
+            const layerBack = new core.Layer();
+            await composition.add(layerBack);
+            await layerBack.add(backClip);
 
-        // 5. Render pratinjau
-        composition.attach(canvas);
-        composition.play();
-        
-        // Secara default, terapkan mask agar video depan terlihat
-        applyMaskFromSliders();
-        statusDiv.textContent = "Kedua video dimuat. Atur slider mask untuk 'mengikis' video depan.";
-    }
+            const layerFront = new core.Layer();
+            await composition.add(layerFront);
+            await layerFront.add(frontClip);
 
-    // Fungsi untuk membuat mask dari nilai slider
-    function createMaskFromSliders() {
-        if (!composition) return null;
-        const x = parseInt(document.getElementById('mask-x').value);
-        const y = parseInt(document.getElementById('mask-y').value);
-        const w = parseInt(document.getElementById('mask-width').value);
-        const h = parseInt(document.getElementById('mask-height').value);
-        const r = parseInt(document.getElementById('mask-radius').value);
+            // 5. Tempelkan player ke DOM (INI KUNCI UNTUK MENAMPILKAN VIDEO)
+            composition.attachPlayer(playerDiv);
 
-        return new core.RectangleMask({
-            x: `${x}%`,
-            y: `${y}%`,
-            width: `${w}%`,
-            height: `${h}%`,
-            radius: r
-        });
-    }
+            // 6. Mulai pemutaran
+            await composition.play();
 
-    // Terapkan mask ke klip depan
-    function applyMaskFromSliders() {
-        if (!frontClip) return;
-        const mask = createMaskFromSliders();
-        if (mask) {
-            frontClip.mask = mask;
-            statusDiv.textContent = `Mask diterapkan: Posisi (${mask.x}, ${mask.y}), Ukuran (${mask.width} x ${mask.height}).`;
+            // 7. Terapkan mask awal
+            applyMaskFromSliders();
+
+            statusDiv.textContent = "✅ Video berhasil dimuat! Atur slider untuk mengikis lapisan depan.";
+            statusDiv.classList.add('success');
+
+        } catch (err) {
+            console.error("Gagal memuat komposisi:", err);
+            statusDiv.textContent = "❌ Gagal memuat video: " + err.message;
+            statusDiv.classList.add('error');
+            // Tampilkan detail tambahan jika ada
+            if (err.stack) console.error(err.stack);
         }
     }
 
-    // Event listener untuk unggah video
+    function applyMaskFromSliders() {
+        if (!frontClip || !composition) return;
+
+        const x = parseInt(document.getElementById('mask-x').value, 10);
+        const y = parseInt(document.getElementById('mask-y').value, 10);
+        const w = parseInt(document.getElementById('mask-width').value, 10);
+        const h = parseInt(document.getElementById('mask-height').value, 10);
+        const r = parseInt(document.getElementById('mask-radius').value, 10);
+
+        // Pastikan mask tidak keluar dari batas komposisi
+        const safeX = Math.max(0, Math.min(x, COMP_WIDTH - 10));
+        const safeY = Math.max(0, Math.min(y, COMP_HEIGHT - 10));
+        const safeW = Math.max(10, Math.min(w, COMP_WIDTH - safeX));
+        const safeH = Math.max(10, Math.min(h, COMP_HEIGHT - safeY));
+
+        frontClip.mask = new core.RectangleMask({
+            x: safeX,
+            y: safeY,
+            width: safeW,
+            height: safeH,
+            radius: r
+        });
+
+        statusDiv.textContent = `Mask diterapkan: Posisi (${safeX}, ${safeY}), Ukuran ${safeW}×${safeH}px.`;
+        statusDiv.className = 'status success';
+    }
+
+    // Event listener untuk input file
     document.getElementById('video-back').addEventListener('change', (e) => {
-        if (e.target.files[0]) {
-            loadVideo(e.target.files[0], (vid) => {
-                videoBack = vid;
-                initComposition();
-            });
+        if (e.target.files.length > 0) {
+            fileBack = e.target.files[0];
+            initComposition();
         }
     });
 
     document.getElementById('video-front').addEventListener('change', (e) => {
-        if (e.target.files[0]) {
-            loadVideo(e.target.files[0], (vid) => {
-                videoFront = vid;
-                initComposition();
-            });
+        if (e.target.files.length > 0) {
+            fileFront = e.target.files[0];
+            initComposition();
         }
     });
 
-    // Event listener untuk tombol terapkan mask
     document.getElementById('apply-btn').addEventListener('click', applyMaskFromSliders);
 
-    // Update label slider saat digeser
+    // Update label slider real-time
     ['mask-x', 'mask-y', 'mask-width', 'mask-height', 'mask-radius'].forEach(id => {
         const slider = document.getElementById(id);
         const label = document.getElementById(`${id}-val`);
         slider.addEventListener('input', () => {
-            const unit = id === 'mask-radius' ? 'px' : '%';
-            label.textContent = slider.value + unit;
+            label.textContent = slider.value + 'px';
         });
-    });
-
-    // Perbaiki ukuran canvas saat jendela di-resize
-    window.addEventListener('resize', () => {
-        if (composition) {
-            composition.resize();
-        }
     });
 </script>
 
