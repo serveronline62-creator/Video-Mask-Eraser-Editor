@@ -26,48 +26,30 @@
     }
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: var(--bg-app);
-        color: var(--text);
-        overflow: hidden;
-        font-size: 13px;
+        background: var(--bg-app); color: var(--text);
+        overflow: hidden; font-size: 13px;
     }
-    .app {
-        display: grid;
-        grid-template-rows: 52px 1fr 30px;
-        height: 100vh;
-    }
+    .app { display: grid; grid-template-rows: 52px 1fr 30px; height: 100vh; }
 
-    /* TOPBAR */
     .topbar {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 0 16px;
-        background: #1a1a1f;
-        border-bottom: 1px solid var(--border);
+        padding: 0 16px; background: #1a1a1f; border-bottom: 1px solid var(--border); gap: 12px;
     }
-    .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-bright); }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-bright); flex-shrink: 0; }
     .logo-icon {
         width: 30px; height: 30px;
         background: linear-gradient(135deg, #5b8def, #ab47bc);
-        border-radius: 7px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px;
-        box-shadow: 0 0 12px rgba(91,141,239,0.4);
+        border-radius: 7px; display: flex; align-items: center; justify-content: center;
+        font-size: 16px; box-shadow: 0 0 12px rgba(91,141,239,0.4);
     }
-    .topbar-actions { display: flex; gap: 8px; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 
     .btn {
         display: inline-flex; align-items: center; gap: 6px;
-        padding: 7px 14px;
-        border: 1px solid var(--border);
-        background: var(--bg-panel-alt);
-        color: var(--text);
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 12.5px;
-        font-weight: 500;
-        transition: all 0.15s;
-        white-space: nowrap;
-        font-family: inherit;
+        padding: 7px 14px; border: 1px solid var(--border);
+        background: var(--bg-panel-alt); color: var(--text);
+        border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 500;
+        transition: all 0.15s; white-space: nowrap; font-family: inherit;
     }
     .btn:hover:not(:disabled) { background: var(--bg-hover); border-color: #4a4a55; }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -77,12 +59,39 @@
     .btn-danger:hover:not(:disabled) { background: #d32f2f; }
     .btn-sm { padding: 4px 10px; font-size: 11px; }
 
-    /* MAIN GRID */
-    .main {
-        display: grid;
-        grid-template-columns: 240px 1fr 320px;
-        overflow: hidden;
+    .quality-select {
+        padding: 7px 10px; background: var(--bg-panel-alt); border: 1px solid var(--border);
+        color: var(--text); border-radius: 6px; font-size: 12.5px; font-family: inherit;
+        cursor: pointer; outline: none; transition: all 0.15s;
     }
+    .quality-select:hover { background: var(--bg-hover); }
+    .quality-select:focus { border-color: var(--accent); }
+
+    .btn-record { background: #3a1f1f; border-color: #5a2a2a; color: #ff8a80; }
+    .btn-record:hover:not(:disabled) { background: #4a2a2a; border-color: var(--danger); }
+    .btn-record.recording {
+        background: var(--danger); border-color: var(--danger); color: #fff;
+        animation: pulse-recording 1.5s infinite;
+    }
+    @keyframes pulse-recording {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239,83,80,0.7); }
+        50% { box-shadow: 0 0 0 8px rgba(239,83,80,0); }
+    }
+
+    .record-time {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; background: rgba(239,83,80,0.15);
+        border: 1px solid var(--danger); border-radius: 6px;
+        color: var(--danger); font-size: 12px; font-family: 'SF Mono', 'Monaco', monospace;
+        font-weight: 600; letter-spacing: 0.5px;
+    }
+    .record-time::before {
+        content: ''; width: 8px; height: 8px; background: var(--danger);
+        border-radius: 50%; animation: blink 1s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .main { display: grid; grid-template-columns: 240px 1fr 320px; overflow: hidden; }
     .sidebar { background: var(--bg-panel); overflow-y: auto; display: flex; flex-direction: column; }
     .sidebar-left { border-right: 1px solid var(--border); }
     .sidebar-right { border-left: 1px solid var(--border); }
@@ -90,23 +99,15 @@
     .panel-section { border-bottom: 1px solid var(--border); padding: 14px; }
     .panel-title {
         font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
-        color: var(--text-dim); margin-bottom: 12px;
-        display: flex; align-items: center; gap: 6px;
+        color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
     }
 
-    /* UPLOAD */
     .upload-item {
-        background: var(--bg-panel-alt);
-        border: 1.5px dashed var(--border);
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
-        transition: all 0.2s;
+        background: var(--bg-panel-alt); border: 1.5px dashed var(--border);
+        border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: all 0.2s;
     }
     .upload-item.filled { border-style: solid; border-color: var(--success); background: rgba(102,187,106,0.08); }
-    .upload-item label {
-        display: block; font-size: 12px; color: var(--text); margin-bottom: 8px; font-weight: 600;
-    }
+    .upload-item label { display: block; font-size: 12px; color: var(--text); margin-bottom: 8px; font-weight: 600; }
     .upload-item input[type="file"] { width: 100%; font-size: 11px; color: var(--text-dim); }
     .upload-item input[type="file"]::file-selector-button {
         background: var(--bg-hover); border: 1px solid var(--border); color: var(--text);
@@ -115,19 +116,12 @@
     }
     .upload-item input[type="file"]::file-selector-button:hover { background: #3a3a45; }
 
-    /* TOOLS */
     .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .tool-btn {
-        display: flex; align-items: center; gap: 6px;
-        padding: 9px 10px;
-        background: var(--bg-panel-alt);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 12px;
-        color: var(--text);
-        transition: all 0.15s;
-        font-family: inherit;
+        display: flex; align-items: center; gap: 6px; padding: 9px 10px;
+        background: var(--bg-panel-alt); border: 1px solid var(--border);
+        border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text);
+        transition: all 0.15s; font-family: inherit;
     }
     .tool-btn:hover { background: var(--bg-hover); }
     .tool-btn.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
@@ -136,74 +130,59 @@
     .tool-btn.active[data-tool="transform"] { background: rgba(171,71,188,0.2); border-color: var(--purple); color: var(--purple); }
     .tool-btn .emoji { font-size: 14px; }
 
-    /* PREVIEW */
     .preview-area {
-        background:
-            repeating-conic-gradient(#0f0f12 0% 25%, #131318 0% 50%) 50% / 20px 20px;
+        background: repeating-conic-gradient(#0f0f12 0% 25%, #131318 0% 50%) 50% / 20px 20px;
         display: flex; align-items: center; justify-content: center;
         padding: 20px; overflow: hidden;
     }
-    .preview-wrapper {
-        position: relative;
-        max-width: 100%; max-height: 100%;
-    }
+    .preview-wrapper { position: relative; max-width: 100%; max-height: 100%; }
     .preview-wrapper canvas {
-        max-width: 100%; max-height: 100%;
-        height: auto; width: auto;
-        display: block;
-        background: #000;
-        border-radius: 10px;
+        max-width: 100%; max-height: 100%; height: auto; width: auto;
+        display: block; background: #000; border-radius: 10px;
         box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
+        transition: box-shadow 0.3s;
     }
     #cursor-overlay {
         position: absolute; pointer-events: none;
-        border: 2px dashed var(--danger); border-radius: 50%;
-        display: none;
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
-        background: rgba(239,83,80,0.1);
+        border: 2px dashed var(--danger); border-radius: 50%; display: none;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.5); background: rgba(239,83,80,0.1);
     }
     #cursor-overlay.restore { border-color: var(--success); background: rgba(102,187,106,0.1); }
     .empty-state {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        text-align: center; color: var(--text-dim);
-        pointer-events: none;
+        text-align: center; color: var(--text-dim); pointer-events: none;
     }
     .empty-state .icon { font-size: 56px; margin-bottom: 14px; opacity: 0.4; }
     .empty-state .text { font-size: 14px; letter-spacing: 0.3px; }
     .preview-controls {
         position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
         display: none; gap: 6px; padding: 6px;
-        background: rgba(20,20,25,0.92);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        backdrop-filter: blur(12px);
+        background: rgba(20,20,25,0.92); border: 1px solid var(--border);
+        border-radius: 24px; backdrop-filter: blur(12px);
         box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
     .preview-controls .btn { padding: 6px 14px; border-radius: 20px; border-color: transparent; background: transparent; }
     .preview-controls .btn:hover:not(:disabled) { background: var(--bg-hover); }
 
-    /* TABS */
+    .preview-wrapper.recording canvas {
+        box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 3px var(--danger), 0 0 20px rgba(239,83,80,0.5);
+    }
+
     .tabs { display: flex; border-bottom: 1px solid var(--border); background: #1a1a1f; }
     .tab-btn {
-        flex: 1; padding: 12px 8px;
-        background: transparent; border: none;
-        color: var(--text-dim);
-        font-size: 12px; font-weight: 600;
-        cursor: pointer; position: relative;
-        transition: color 0.15s;
-        font-family: inherit;
+        flex: 1; padding: 12px 8px; background: transparent; border: none;
+        color: var(--text-dim); font-size: 12px; font-weight: 600;
+        cursor: pointer; position: relative; transition: color 0.15s; font-family: inherit;
     }
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--accent); }
     .tab-btn.active::after {
         content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
-        height: 2px; background: var(--accent);
-        box-shadow: 0 0 8px var(--accent-glow);
+        height: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
     }
     .tab-content { display: none; padding: 16px; flex: 1; overflow-y: auto; }
     .tab-content.active { display: block; }
 
-    /* CONTROLS */
     .control-group { margin-bottom: 22px; }
     .control-group-title {
         font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
@@ -214,8 +193,7 @@
     .slider-row label { min-width: 65px; font-size: 12px; color: var(--text); font-weight: 500; }
     .slider-row input[type="range"] {
         flex: 1; -webkit-appearance: none; appearance: none;
-        height: 4px; background: var(--bg-input); border-radius: 2px;
-        outline: none; cursor: pointer;
+        height: 4px; background: var(--bg-input); border-radius: 2px; outline: none; cursor: pointer;
     }
     .slider-row input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none; appearance: none;
@@ -230,10 +208,8 @@
         cursor: pointer; border: 2px solid #1a1a1f;
     }
     .slider-row .value {
-        min-width: 60px; text-align: right;
-        font-size: 11px; color: var(--text-dim);
-        font-variant-numeric: tabular-nums;
-        font-family: 'SF Mono', 'Monaco', monospace;
+        min-width: 60px; text-align: right; font-size: 11px; color: var(--text-dim);
+        font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'Monaco', monospace;
     }
 
     .toggle-row {
@@ -243,10 +219,8 @@
     }
     .toggle-row input[type="checkbox"] {
         -webkit-appearance: none; appearance: none;
-        width: 34px; height: 19px;
-        background: var(--bg-input); border-radius: 10px;
-        position: relative; cursor: pointer;
-        transition: all 0.2s;
+        width: 34px; height: 19px; background: var(--bg-input); border-radius: 10px;
+        position: relative; cursor: pointer; transition: all 0.2s;
         border: 1px solid var(--border); flex-shrink: 0;
     }
     .toggle-row input[type="checkbox"]::after {
@@ -258,17 +232,14 @@
     .toggle-row input[type="checkbox"]:checked::after { background: #fff; left: 17px; }
     .toggle-row label { font-size: 12px; color: var(--text); cursor: pointer; flex: 1; }
 
-    /* STATUS BAR */
     .statusbar {
         display: flex; align-items: center; padding: 0 16px;
         background: #131316; border-top: 1px solid var(--border);
-        font-size: 11.5px; color: var(--text-dim);
-        gap: 8px;
+        font-size: 11.5px; color: var(--text-dim); gap: 8px;
     }
     .statusbar .dot {
         width: 7px; height: 7px; border-radius: 50%;
-        background: var(--success); flex-shrink: 0;
-        box-shadow: 0 0 6px var(--success);
+        background: var(--success); flex-shrink: 0; box-shadow: 0 0 6px var(--success);
     }
     .statusbar.error { color: var(--danger); }
     .statusbar.error .dot { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
@@ -276,13 +247,14 @@
     .statusbar.warning { color: var(--warning); }
     .statusbar.warning .dot { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
 
-    /* SCROLLBAR */
     ::-webkit-scrollbar { width: 9px; height: 9px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #2f2f38; border-radius: 5px; border: 2px solid var(--bg-panel); }
     ::-webkit-scrollbar-thumb:hover { background: #3f3f4a; }
 
-    /* RESPONSIVE */
+    @media (max-width: 1080px) {
+        .topbar-actions .btn { padding: 7px 10px; font-size: 12px; }
+    }
     @media (max-width: 900px) {
         .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
         .sidebar { max-height: 220px; border: none !important; border-bottom: 1px solid var(--border) !important; }
@@ -292,23 +264,27 @@
 </head>
 <body>
 <div class="app">
-    <!-- TOPBAR -->
     <header class="topbar">
         <div class="logo">
             <div class="logo-icon">🎬</div>
             <span>Video Mask Editor</span>
         </div>
         <div class="topbar-actions">
-            <button id="btn-play" class="btn btn-primary" disabled>▶ Play</button>
+            <span id="record-time" class="record-time" style="display:none;">00:00</span>
+            <select id="quality-select" class="quality-select" title="Resolusi rekaman">
+                <option value="SD">SD 480p</option>
+                <option value="HD" selected>HD 720p</option>
+                <option value="FULLHD">Full HD 1080p</option>
+            </select>
+            <button id="btn-play" class="btn" disabled>▶ Play</button>
             <button id="btn-pause" class="btn" disabled>⏸ Pause</button>
-            <button id="btn-reset" class="btn" disabled>↺ Reset</button>
+            <button id="btn-reset" class="btn" disabled>↺</button>
+            <button id="btn-record" class="btn btn-record" disabled>⏺ Record</button>
             <button id="btn-export" class="btn btn-danger" disabled>⬇ Export</button>
         </div>
     </header>
 
-    <!-- MAIN -->
     <main class="main">
-        <!-- LEFT SIDEBAR -->
         <aside class="sidebar sidebar-left">
             <section class="panel-section">
                 <div class="panel-title">📥 Sources</div>
@@ -333,9 +309,8 @@
             </section>
         </aside>
 
-        <!-- PREVIEW -->
         <section class="preview-area">
-            <div class="preview-wrapper">
+            <div class="preview-wrapper" id="preview-wrapper">
                 <canvas id="canvas" width="1280" height="720"></canvas>
                 <div id="cursor-overlay"></div>
                 <div class="empty-state" id="empty-state">
@@ -350,7 +325,6 @@
             </div>
         </section>
 
-        <!-- RIGHT SIDEBAR -->
         <aside class="sidebar sidebar-right">
             <div class="tabs">
                 <button class="tab-btn active" data-tab="tab-transform">Transform</button>
@@ -459,7 +433,6 @@
         </aside>
     </main>
 
-    <!-- STATUS BAR -->
     <footer class="statusbar" id="statusbar">
         <span class="dot"></span>
         <span id="status">Siap. Unggah kedua video untuk memulai.</span>
@@ -474,9 +447,12 @@ const maskCanvas = document.createElement('canvas');
 const maskCtx = maskCanvas.getContext('2d');
 const offCanvas = document.createElement('canvas');
 const offCtx = offCanvas.getContext('2d');
+const recordCanvas = document.createElement('canvas');
+const recordCtx = recordCanvas.getContext('2d');
 const cursorOverlay = $('cursor-overlay');
 const emptyState = $('empty-state');
 const previewControls = $('preview-controls');
+const previewWrapper = $('preview-wrapper');
 const statusbar = $('statusbar');
 
 const videoBack = document.createElement('video');
@@ -484,13 +460,24 @@ const videoFront = document.createElement('video');
 [videoBack, videoFront].forEach(v => { v.muted = true; v.playsInline = true; });
 
 let backLoaded = false, frontLoaded = false;
-let rafId = null, isExporting = false;
+let rafId = null, isExporting = false, isRecording = false;
 let currentTool = 'view';
 let eraserSize = 60;
 let isDrawing = false, lastX = null, lastY = null;
 let dragState = null;
+let mediaRecorder = null;
+let recordChunks = [];
+let recordStartTime = 0;
+let recordTimerInterval = null;
 
-const ALL_ACTION_BTN_IDS = ['btn-play', 'btn-pause', 'btn-reset', 'btn-export',
+const RESOLUTIONS = {
+    SD:     { w: 854,  h: 480,  bitrate: 2500000,  label: 'SD 480p' },
+    HD:     { w: 1280, h: 720,  bitrate: 5000000,  label: 'HD 720p' },
+    FULLHD: { w: 1920, h: 1080, bitrate: 10000000, label: 'Full HD 1080p' }
+};
+
+// Tombol yang aktif SETELAH video dimuat. Export sementara dinonaktifkan saat recording.
+const ALL_BTN_IDS = ['btn-play', 'btn-pause', 'btn-reset', 'btn-record', 'btn-export',
     'btn-play-float', 'btn-pause-float', 'btn-reset-float',
     'btn-clear-eraser', 'btn-reset-back', 'btn-reset-front'];
 
@@ -499,8 +486,8 @@ function setStatus(msg, type = '') {
     statusbar.className = 'statusbar' + (type ? ' ' + type : '');
 }
 
-function enableActionButtons(enabled) {
-    ALL_ACTION_BTN_IDS.forEach(id => { if ($(id)) $(id).disabled = !enabled; });
+function setAllButtonsEnabled(enabled) {
+    ALL_BTN_IDS.forEach(id => { if ($(id)) $(id).disabled = !enabled; });
 }
 
 function roundedRectPath(c, x, y, w, h, r) {
@@ -576,7 +563,8 @@ function drawVideoTransformed(context, video, prefix) {
     context.drawImage(video, drawX, drawY, drawW, drawH);
 }
 
-function drawFrame() {
+// --- RENDER BASE (tanpa handle) untuk feed recorder ---
+function drawBaseScene() {
     const w = canvas.width, h = canvas.height;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
@@ -622,8 +610,6 @@ function drawFrame() {
             ctx.restore();
         }
     }
-
-    drawTransformHandles();
 }
 
 function drawTransformHandles() {
@@ -652,7 +638,21 @@ function drawTransformHandles() {
     ctx.restore();
 }
 
-function renderLoop() { drawFrame(); rafId = requestAnimationFrame(renderLoop); }
+function drawFrame() {
+    drawBaseScene();
+    drawTransformHandles();
+}
+
+// Render loop: base scene -> copy clean frame ke recordCanvas -> draw handles untuk user
+// Sehingga handle TIDAK muncul di hasil rekaman, tapi tetap terlihat di preview.
+function renderLoop() {
+    drawBaseScene();
+    if ((isRecording || isExporting) && recordCanvas.width) {
+        recordCtx.drawImage(canvas, 0, 0, recordCanvas.width, recordCanvas.height);
+    }
+    drawTransformHandles();
+    rafId = requestAnimationFrame(renderLoop);
+}
 function startLoop() { if (rafId) cancelAnimationFrame(rafId); rafId = requestAnimationFrame(renderLoop); }
 function stopLoop() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
 
@@ -695,7 +695,7 @@ function whenBothLoaded() {
     let w = Math.min(videoBack.videoWidth || 1280, 1280);
     let h = Math.round(w / ratio);
     resizeCanvases(w, h);
-    enableActionButtons(true);
+    setAllButtonsEnabled(true);
     emptyState.style.display = 'none';
     previewControls.style.display = 'flex';
     drawFrame();
@@ -713,7 +713,6 @@ $('file-front').onchange = async (e) => {
     catch (err) { setStatus('❌ ' + err.message, 'error'); }
 };
 
-// Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -723,7 +722,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
-// Tool selector
+// Tool selector — TIDAK diblokir saat merekam
 document.querySelectorAll('.tool-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentTool = btn.dataset.tool;
@@ -739,6 +738,7 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
     });
 });
 
+// Pointer handlers — TIDAK diblokir saat merekam
 function onPointerDown(e) {
     if (!backLoaded || !frontLoaded || isExporting) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -844,26 +844,31 @@ canvas.addEventListener('touchstart', onPointerDown, { passive: false });
 canvas.addEventListener('touchmove', onPointerMove, { passive: false });
 canvas.addEventListener('touchend', onPointerUp);
 
+// Play/Pause/Reset — semua tetap berfungsi saat merekam
 function doPlay() {
     if (!backLoaded || !frontLoaded) return;
     try {
         if (videoBack.ended) videoBack.currentTime = 0;
         if (videoFront.ended) videoFront.currentTime = 0;
         Promise.all([videoBack.play(), videoFront.play()]).then(() => {
-            startLoop(); setStatus('▶ Memutar...');
+            startLoop(); setStatus(isRecording ? '▶ Memutar (sambil merekam)...' : '▶ Memutar...');
         });
     } catch (err) { setStatus('❌ ' + err.message, 'error'); }
 }
 function doPause() {
     videoBack.pause(); videoFront.pause();
-    stopLoop(); drawFrame(); setStatus('⏸ Dijeda.');
+    // Saat merekam, biarkan loop tetap berjalan agar frame tetap dikirim ke recorder
+    if (!isRecording) stopLoop();
+    drawFrame();
+    setStatus(isRecording ? '⏸ Dijeda (rekaman tetap berjalan).' : '⏸ Dijeda.');
 }
 function doReset() {
     videoBack.pause(); videoFront.pause();
     videoBack.currentTime = 0; videoFront.currentTime = 0;
-    stopLoop(); drawFrame(); setStatus('↺ Video di-reset.');
+    if (!isRecording) stopLoop();
+    drawFrame();
+    setStatus(isRecording ? '↺ Video di-reset (rekaman tetap berjalan).' : '↺ Video di-reset.');
 }
-
 $('btn-play').onclick = doPlay;
 $('btn-play-float').onclick = doPlay;
 $('btn-pause').onclick = doPause;
@@ -917,52 +922,174 @@ $('eraser-size').addEventListener('input', () => {
 $('rect-enabled').addEventListener('change', () => { if (!rafId) drawFrame(); });
 $('invert').addEventListener('change', () => { if (!rafId) drawFrame(); });
 
+// ===== RECORDING =====
+function getBestMime() {
+    const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    for (const t of types) if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) return t;
+    return null;
+}
+
+function setupRecordCanvas(quality) {
+    const res = RESOLUTIONS[quality];
+    recordCanvas.width = res.w;
+    recordCanvas.height = res.h;
+    recordCtx.fillStyle = '#000';
+    recordCtx.fillRect(0, 0, res.w, res.h);
+    drawBaseScene();
+    recordCtx.drawImage(canvas, 0, 0, res.w, res.h);
+    return res;
+}
+
+function formatTime(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function startRecording() {
+    if (isRecording) return;
+    if (isExporting) { setStatus('⚠️ Tunggu export selesai.', 'warning'); return; }
+    if (!window.MediaRecorder) { setStatus('❌ Browser tidak mendukung MediaRecorder.', 'error'); return; }
+    if (!backLoaded || !frontLoaded) { setStatus('❌ Video belum dimuat.', 'error'); return; }
+
+    const mimeType = getBestMime();
+    if (!mimeType) { setStatus('❌ Format WebM tidak didukung.', 'error'); return; }
+
+    const quality = $('quality-select').value;
+    const res = setupRecordCanvas(quality);
+
+    recordChunks = [];
+    const stream = recordCanvas.captureStream(30);
+
+    try {
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType,
+            videoBitsPerSecond: res.bitrate
+        });
+    } catch (err) {
+        setStatus('❌ Gagal membuat recorder: ' + err.message, 'error');
+        return;
+    }
+
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(recordChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `video-mask-${quality}-${Date.now()}.webm`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        setStatus(`✅ Rekaman ${res.label} selesai! File telah diunduh.`, 'success');
+    };
+
+    // Reset video ke awal & putar (kalau sebelumnya dijeda/ended)
+    videoBack.currentTime = 0;
+    videoFront.currentTime = 0;
+    Promise.all([videoBack.play(), videoFront.play()]).catch(() => {});
+
+    if (!rafId) startLoop();
+
+    mediaRecorder.start(100);
+
+    isRecording = true;
+    previewWrapper.classList.add('recording');
+    $('btn-record').classList.add('recording');
+    $('btn-record').textContent = '⏹ Stop';
+
+    // HANYA tombol Export yang dinonaktifkan (karena akan menjalankan recorder kedua)
+    $('btn-export').disabled = true;
+
+    // Timer
+    recordStartTime = Date.now();
+    $('record-time').style.display = 'inline-flex';
+    $('record-time').textContent = '00:00';
+    clearInterval(recordTimerInterval);
+    recordTimerInterval = setInterval(() => {
+        if (!isRecording) return;
+        $('record-time').textContent = formatTime(Date.now() - recordStartTime);
+    }, 250);
+
+    setStatus(`🔴 Merekam ${res.label} (${res.w}×${res.h})... Semua tool tetap aktif.`, 'warning');
+}
+
+function stopRecording() {
+    if (!isRecording) return;
+
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+    }
+    isRecording = false;
+    previewWrapper.classList.remove('recording');
+    $('btn-record').classList.remove('recording');
+    $('btn-record').textContent = '⏺ Record';
+    clearInterval(recordTimerInterval);
+    $('record-time').style.display = 'none';
+
+    // Re-enable hanya export (yang tadi dinonaktifkan)
+    $('btn-export').disabled = false;
+
+    if (videoBack.paused && videoFront.paused) stopLoop();
+
+    setStatus('⏹ Rekaman dihentikan. File sedang diproses...', 'warning');
+}
+
+videoBack.addEventListener('ended', () => {
+    if (isRecording) setTimeout(stopRecording, 200);
+});
+
+$('btn-record').onclick = () => {
+    if (isRecording) stopRecording();
+    else startRecording();
+};
+
+// ===== EXPORT (full durasi, tombol dinonaktifkan selama proses) =====
 $('btn-export').onclick = async () => {
     if (isExporting) return;
+    if (isRecording) { setStatus('⚠️ Hentikan rekaman dulu.', 'warning'); return; }
     if (!window.MediaRecorder) { setStatus('❌ Browser tidak mendukung MediaRecorder.', 'error'); return; }
     const duration = Math.min(videoBack.duration, videoFront.duration);
     if (!isFinite(duration) || duration <= 0) { setStatus('❌ Durasi video tidak valid.', 'error'); return; }
 
-    isExporting = true;
-    enableActionButtons(false);
-    setStatus(`🔴 Merekam ${duration.toFixed(1)} detik...`, 'warning');
+    const quality = $('quality-select').value;
+    const res = setupRecordCanvas(quality);
+    const mimeType = getBestMime();
+    if (!mimeType) { setStatus('❌ Format WebM tidak didukung.', 'error'); return; }
 
-    const stream = canvas.captureStream(30);
-    let mimeType = 'video/webm;codecs=vp9';
-    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm;codecs=vp8';
-    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+    isExporting = true;
+    setAllButtonsEnabled(false);
 
     const chunks = [];
-    const recorder = new MediaRecorder(stream, { mimeType });
+    const stream = recordCanvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: res.bitrate });
     recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'video-mask-' + Date.now() + '.webm';
+        a.download = `video-mask-${quality}-${Date.now()}.webm`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 2000);
-        setStatus('✅ Export selesai!', 'success');
+        setStatus(`✅ Export ${res.label} selesai!`, 'success');
         isExporting = false;
-        enableActionButtons(true);
+        setAllButtonsEnabled(true);
     };
 
-    const prevTool = currentTool;
-    currentTool = 'view';
     videoBack.currentTime = 0; videoFront.currentTime = 0;
     await Promise.all([videoBack.play(), videoFront.play()]);
-    startLoop();
+    if (!rafId) startLoop();
     recorder.start(100);
+    setStatus(`🔴 Export ${res.label} (${res.w}×${res.h})... Mohon tunggu.`, 'warning');
 
-    const stopRecording = () => {
+    const stopRec = () => {
         if (recorder.state === 'recording') recorder.stop();
         videoBack.pause(); videoFront.pause();
         stopLoop();
-        currentTool = prevTool;
     };
-    videoBack.onended = stopRecording;
-    setTimeout(stopRecording, duration * 1000 + 300);
+    videoBack.addEventListener('ended', stopRec, { once: true });
+    setTimeout(stopRec, duration * 1000 + 300);
 };
 
 drawFrame();
